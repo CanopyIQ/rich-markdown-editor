@@ -26,6 +26,7 @@ function getLinkInSelection(value): any {
 type Props = {
   editor: Editor,
   value: Value,
+  onClickLink?: (href: string) => *,
 };
 
 type State = {
@@ -34,7 +35,6 @@ type State = {
   top: string,
   left: string,
   mouseDown: boolean,
-  onClickLink?: (href: string) => *,
 };
 
 export default class Toolbar extends React.Component<Props, State> {
