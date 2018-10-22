@@ -47,6 +47,8 @@ type Props = {
   renderPlaceholder?: SlateNodeProps => ?React.Node,
   className?: string,
   style?: Object,
+  includeToolbar: boolean,
+  includeBlockInsert: boolean,
 };
 
 type State = {
@@ -60,6 +62,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     placeholder: "Write something nice…",
     onImageUploadStart: () => {},
     onImageUploadStop: () => {},
+    includeToolbar: true,
+    includeBlockInsert: true,
   };
 
   editor: Editor;
@@ -265,6 +269,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
       className,
       style,
       dark,
+      includeBlockInsert,
+      includeToolbar,
     } = this.props;
 
     const theme = this.props.theme || (dark ? darkTheme : lightTheme);
@@ -286,11 +292,17 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
             {toc &&
               this.state.editorLoaded &&
               this.editor && <Contents editor={this.editor} />}
-            {!readOnly &&
+            {includeToolbar &&
+              !readOnly &&
               this.editor && (
-                <Toolbar value={this.state.editorValue} editor={this.editor} />
+                <Toolbar
+                  value={this.state.editorValue}
+                  editor={this.editor}
+                  onClickLink={onClickLink}
+                />
               )}
-            {!readOnly &&
+            {includeBlockInsert &&
+              !readOnly &&
               this.editor && (
                 <BlockInsert
                   editor={this.editor}

@@ -23,6 +23,7 @@ type Props = {
   suggestions?: Suggestion[],
   onBlur: () => *,
   theme: *,
+  onClickLink?: (href: string) => *,
 };
 
 type State = {
@@ -164,7 +165,11 @@ class LinkToolbar extends React.Component<Props, State> {
 
   openLink = () => {
     const href = this.props.link.data.get("href");
-    window.open(href, "_blank");
+    if (this.props.onClickLink) {
+      this.props.onClickLink(href);
+    } else {
+      window.open(href, "_blank");
+    }
   };
 
   save = (href: string) => {
