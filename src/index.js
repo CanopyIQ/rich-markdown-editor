@@ -430,7 +430,7 @@ const StyledEditor = styled(Editor)`
   }
 
   span[data-slate-zero-width] {
-    display: inline-block;
+    display: inline;
   }
 `;
 
