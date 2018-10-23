@@ -360,6 +360,7 @@ const StyledEditor = styled(Editor)`
   ol {
     margin: 0 0.1em;
     padding-left: 1em;
+    margin-left: 1em;
 
     ul,
     ol {
@@ -427,6 +428,10 @@ const StyledEditor = styled(Editor)`
   b,
   strong {
     font-weight: 600;
+  }
+  
+  del {
+    text-decoration: line-through;
   }
 
   span[data-slate-zero-width] {
