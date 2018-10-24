@@ -46,6 +46,8 @@ const ListItem = styled.li`
 
 const Input = styled.input`
   position: absolute;
+  margin: auto;
   left: 0;
-  top: 0.4em;
+  top: 0;
+  bottom: 0;
 `;

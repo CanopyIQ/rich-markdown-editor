@@ -117,6 +117,10 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     return Markdown.serialize(this.state.editorValue);
   };
 
+  setValue = (markdownText: string) => {
+    this.setState({ editorValue: Markdown.deserialize(markdownText) })
+  };
+
   handleChange = (change: Change) => {
     if (this.state.editorValue !== change.value) {
       this.setState({ editorValue: change.value }, state => {
