@@ -49,6 +49,8 @@ type Props = {
   style?: Object,
   includeToolbar: boolean,
   includeBlockInsert: boolean,
+  autoCorrect: boolean,
+  spellCheck: boolean,
 };
 
 type State = {
@@ -64,6 +66,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     onImageUploadStop: () => {},
     includeToolbar: true,
     includeBlockInsert: true,
+    autoCorrect: false,
+    spellCheck: false,
   };
 
   editor: Editor;
@@ -275,6 +279,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
       dark,
       includeBlockInsert,
       includeToolbar,
+      autoCorrect,
+      spellCheck
     } = this.props;
 
     const theme = this.props.theme || (dark ? darkTheme : lightTheme);
@@ -331,9 +337,10 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
               onImageUploadStop={onImageUploadStop}
               onShowToast={onShowToast}
               readOnly={readOnly}
-              spellCheck={!readOnly}
+              spellCheck={!readOnly && spellCheck}
               uploadImage={uploadImage}
               pretitle={pretitle}
+              autoCorrect={autoCorrect}
             />
           </React.Fragment>
         </ThemeProvider>
