@@ -27,6 +27,7 @@ type Props = {
   editor: Editor,
   value: Value,
   onClickLink?: (href: string) => *,
+  disableForTitle: boolean,
 };
 
 type State = {
@@ -38,6 +39,10 @@ type State = {
 };
 
 export default class Toolbar extends React.Component<Props, State> {
+  static defaultProps = {
+    disableForTitle: false,
+  };
+
   state = {
     active: false,
     mouseDown: false,
@@ -84,7 +89,7 @@ export default class Toolbar extends React.Component<Props, State> {
   };
 
   update = () => {
-    const { value } = this.props;
+    const { value, disableForTitle } = this.props;
     const link = getLinkInSelection(value);
     const selection = window.getSelection();
 
@@ -114,7 +119,7 @@ export default class Toolbar extends React.Component<Props, State> {
     if (!value.startBlock) return;
 
     // don't display toolbar for document title
-    if (value.startBlock.type === "heading1") active = false;
+    if (value.startBlock.type === "heading1" && disableForTitle ) active = false;
 
     // don't display toolbar for code blocks, code-lines or inline code
     if (value.startBlock.type.match(/code/)) active = false;
