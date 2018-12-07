@@ -68,6 +68,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     includeBlockInsert: true,
     autoCorrect: false,
     spellCheck: false,
+    blockInsertHoverWidthFactor: 0.33,
   };
 
   editor: Editor;
@@ -317,6 +318,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
                 <BlockInsert
                   editor={this.editor}
                   onInsertImage={this.insertImageFile}
+                  hoverWidthFactor={this.props.blockInsertHoverWidthFactor}
                 />
               )}
             <StyledEditor

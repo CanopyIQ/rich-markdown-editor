@@ -10,6 +10,7 @@ import { PlusIcon } from "outline-icons";
 type Props = {
   editor: Editor,
   theme: Object,
+  hoverWidthFactor: number,
 };
 
 function findClosestRootNode(value, ev) {
@@ -41,6 +42,10 @@ class BlockInsert extends React.Component<Props, State> {
     closestRootNode: undefined,
   };
 
+  static defaultProps = {
+    hoverWidthFactor: 0.33
+  };
+
   componentDidMount = () => {
     window.addEventListener("mousemove", this.handleMouseMove);
   };
@@ -55,7 +60,7 @@ class BlockInsert extends React.Component<Props, State> {
   };
 
   handleMouseMove = (ev: SyntheticMouseEvent<*>) => {
-    const windowWidth = window.innerWidth * 0.33;
+    const windowWidth = window.innerWidth * this.props.hoverWidthFactor;
     const result = findClosestRootNode(this.props.editor.value, ev);
     const newState = { ...this.state };
 

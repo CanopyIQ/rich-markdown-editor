@@ -202,22 +202,6 @@ const Bar = styled(Flex)`
   position: relative;
   align-items: center;
   background: ${props => props.theme.blockToolbarBackground};
-  height: 44px;
-
-  &:before,
-  &:after {
-    content: "";
-    position: absolute;
-    left: -100%;
-    width: 100%;
-    height: 44px;
-    background: ${props => props.theme.blockToolbarBackground};
-  }
-
-  &:after {
-    left: auto;
-    right: -100%;
-  }
 
   @media print {
     display: none;
