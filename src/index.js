@@ -274,7 +274,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
       includeBlockInsert,
       includeToolbar,
       autoCorrect,
-      spellCheck
+      spellCheck,
       defaultValue,
       autoFocus,
       plugins,
