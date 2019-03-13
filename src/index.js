@@ -1,9 +1,9 @@
 // @flow
 import * as React from "react";
-import { Value, Change, Schema, Text } from "slate";
+import { Value, Editor as TEditor, Schema, Node } from "slate";
 import { Editor } from "slate-react";
 import styled, { ThemeProvider } from "styled-components";
-import type { SlateNodeProps, Plugin, SearchResult } from "./types";
+import type { Plugin, SearchResult } from "./types";
 import { light as lightTheme, dark as darkTheme } from "./theme";
 import defaultSchema from "./schema";
 import getDataTransferFiles from "./lib/getDataTransferFiles";
@@ -11,23 +11,21 @@ import isModKey from "./lib/isModKey";
 import Flex from "./components/Flex";
 import Toolbar from "./components/Toolbar";
 import BlockInsert from "./components/BlockInsert";
-import InternalPlaceholder from "./components/Placeholder";
 import Contents from "./components/Contents";
 import Markdown from "./serializer";
 import createPlugins from "./plugins";
-import { insertImageFile } from "./changes";
-import renderMark from "./marks";
-import renderNode from "./nodes";
+import commands from "./commands";
+import queries from "./queries";
 
 export const theme = lightTheme;
 export const schema = defaultSchema;
-export const Placeholder = InternalPlaceholder;
 
 type Props = {
+  id?: string,
   defaultValue: string,
   placeholder: string,
   pretitle?: string,
-  plugins?: Plugin[],
+  plugins: Plugin[],
   autoFocus?: boolean,
   readOnly?: boolean,
   toc?: boolean,
@@ -43,8 +41,7 @@ type Props = {
   onSearchLink?: (term: string) => Promise<SearchResult[]>,
   onClickLink?: (href: string) => *,
   onShowToast?: (message: string) => *,
-  renderNode?: SlateNodeProps => ?React.Node,
-  renderPlaceholder?: SlateNodeProps => ?React.Node,
+  getLinkComponent?: Node => ?React.ComponentType<*>,
   className?: string,
   style?: Object,
   includeToolbar: boolean,
@@ -69,6 +66,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     autoCorrect: false,
     spellCheck: false,
     blockInsertHoverWidthFactor: 0.33,
+    plugins: [],
   };
 
   editor: Editor;
@@ -79,14 +77,15 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    this.plugins = createPlugins();
-    if (props.plugins) {
-      if (Array.isArray(props.plugins)) {
-        this.plugins = props.plugins.concat(this.plugins);
-      } else {
-        console.warn("Editor.plugins prop must be an array of Slate plugins");
-      }
-    }
+    const builtInPlugins = createPlugins({
+      placeholder: props.placeholder,
+      getLinkComponent: props.getLinkComponent,
+    });
+
+    // in Slate plugins earlier in the stack can opt not to continue
+    // to later ones. By adding overrides first we give more control
+    this.plugins = [...props.plugins, ...builtInPlugins];
+
     this.state = {
       editorLoaded: false,
       editorValue: Markdown.deserialize(props.defaultValue),
@@ -94,6 +93,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
+    this.scrollToAnchor();
+
     if (this.props.readOnly) return;
     window.addEventListener("keydown", this.handleKeyDown);
 
@@ -112,6 +113,21 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     window.removeEventListener("keydown", this.handleKeyDown);
   }
 
+  scrollToAnchor() {
+    const { hash } = window.location;
+    if (!hash) return;
+
+    try {
+      const element = document.querySelector(hash);
+      if (element) element.scrollIntoView({ behavior: "smooth" });
+    } catch (err) {
+      // querySelector will throw an error if the hash begins with a number
+      // or contains a period. This is protected against now by safeSlugify
+      // however previous links may be in the wild.
+      console.warn("Attempted to scroll to invalid hash", err);
+    }
+  }
+
   setEditorRef = (ref: Editor) => {
     this.editor = ref;
     // Force re-render to show ToC (<Content />)
@@ -126,9 +142,9 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     this.setState({ editorValue: Markdown.deserialize(markdownText) })
   };
 
-  handleChange = (change: Change) => {
-    if (this.state.editorValue !== change.value) {
-      this.setState({ editorValue: change.value }, state => {
+  handleChange = ({ value }: { value: Value }) => {
+    if (this.state.editorValue !== value) {
+      this.setState({ editorValue: value }, state => {
         if (this.props.onChange && !this.props.readOnly) {
           this.props.onChange(this.value);
         }
@@ -159,9 +175,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   };
 
   insertImageFile = (file: window.File) => {
-    this.editor.change(change =>
-      change.call(insertImageFile, file, this.editor)
-    );
+    this.editor.insertImageFile(file);
   };
 
   cancelEvent = (ev: SyntheticEvent<*>) => {
@@ -195,60 +209,37 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  handleKeyDown = (ev: SyntheticKeyboardEvent<*>) => {
-    if (this.props.readOnly) return;
+  handleKeyDown = (
+    ev: SyntheticKeyboardEvent<*>,
+    editor: TEditor,
+    next: Function = () => {}
+  ) => {
+    if (this.props.readOnly) return next();
 
     switch (ev.key) {
       case "s":
-        if (isModKey(ev)) this.onSave(ev);
-        return;
+        if (isModKey(ev)) return this.onSave(ev);
+        break;
       case "Enter":
-        if (isModKey(ev)) this.onSaveAndExit(ev);
-        return;
+        if (isModKey(ev)) return this.onSaveAndExit(ev);
+        break;
       case "Escape":
-        if (isModKey(ev)) this.onCancel(ev);
-        return;
+        if (isModKey(ev)) return this.onCancel(ev);
+        break;
       default:
     }
+
+    return next();
   };
 
   focusAtStart = () => {
-    this.editor.change(change =>
-      change.collapseToStartOf(change.value.document).focus()
-    );
+    const { editor } = this;
+    editor.moveToStartOfDocument().focus();
   };
 
   focusAtEnd = () => {
-    this.editor.change(change =>
-      change.collapseToEndOf(change.value.document).focus()
-    );
-  };
-
-  renderNode = (props: SlateNodeProps) => {
-    const node = this.props.renderNode && this.props.renderNode(props);
-    if (node) return node;
-
-    return renderNode(props);
-  };
-
-  renderPlaceholder = (props: SlateNodeProps) => {
-    if (this.props.renderPlaceholder) {
-      return this.props.renderPlaceholder(props);
-    }
-    const { editor, node } = props;
-
-    if (!editor.props.placeholder) return;
-    if (editor.state.isComposing) return;
-    if (node.object !== "block") return;
-    if (!Text.isTextList(node.nodes)) return;
-    if (node.text !== "") return;
-    if (editor.value.document.getBlocks().size > 1) return;
-
-    return (
-      <Placeholder>
-        {editor.props.readOnly ? "" : editor.props.placeholder}
-      </Placeholder>
-    );
+    const { editor } = this;
+    editor.moveToEndOfDocument().focus();
   };
 
   getSchema = () => {
@@ -269,6 +260,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
       pretitle,
       placeholder,
       onSave,
+      onChange,
+      onCancel,
       uploadImage,
       onSearchLink,
       onClickLink,
@@ -282,6 +275,10 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
       includeToolbar,
       autoCorrect,
       spellCheck
+      defaultValue,
+      autoFocus,
+      plugins,
+      ...rest
     } = this.props;
 
     const theme = this.props.theme || (dark ? darkTheme : lightTheme);
@@ -322,13 +319,12 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
                 />
               )}
             <StyledEditor
-              innerRef={this.setEditorRef}
+              ref={this.setEditorRef}
               plugins={this.plugins}
               value={this.state.editorValue}
+              commands={commands}
+              queries={queries}
               placeholder={placeholder}
-              renderPlaceholder={this.renderPlaceholder}
-              renderNode={this.renderNode}
-              renderMark={renderMark}
               schema={this.getSchema()}
               onKeyDown={this.handleKeyDown}
               onChange={this.handleChange}
@@ -343,6 +339,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
               uploadImage={uploadImage}
               pretitle={pretitle}
               autoCorrect={autoCorrect}
+              {...rest}
             />
           </React.Fragment>
         </ThemeProvider>
