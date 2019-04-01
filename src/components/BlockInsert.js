@@ -11,6 +11,7 @@ type Props = {
   editor: Editor,
   theme: Object,
   hoverWidthFactor: number,
+  zIndex: number,
 };
 
 function findClosestRootNode(value, ev) {
@@ -43,7 +44,8 @@ class BlockInsert extends React.Component<Props, State> {
   };
 
   static defaultProps = {
-    hoverWidthFactor: 0.33
+    hoverWidthFactor: 0.33,
+    zIndex: 1,
   };
 
   componentDidMount = () => {
@@ -127,8 +129,8 @@ class BlockInsert extends React.Component<Props, State> {
   };
 
   render() {
-    const { theme } = this.props;
-    const style = { top: `${this.state.top}px`, left: `${this.state.left}px` };
+    const { theme, zIndex } = this.props;
+    const style = { top: `${this.state.top}px`, left: `${this.state.left}px`, zIndex };
 
     return (
       <Portal>
@@ -145,7 +147,6 @@ class BlockInsert extends React.Component<Props, State> {
 
 const Trigger = styled.div`
   position: absolute;
-  z-index: 1;
   opacity: 0;
   background-color: ${props => props.theme.background};
   transition: opacity 150ms cubic-bezier(0.175, 0.885, 0.32, 1.275),

@@ -51,6 +51,8 @@ type Props = {
   includeBlockInsert: boolean,
   autoCorrect: boolean,
   spellCheck: boolean,
+  toolbarZ: number,
+  blockInsertZ: number,
 };
 
 type State = {
@@ -69,6 +71,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     autoCorrect: false,
     spellCheck: false,
     blockInsertHoverWidthFactor: 0.33,
+    toolbarZ: 2,
+    blockInsertZ: 1,
   };
 
   editor: Editor;
@@ -310,6 +314,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
                   value={this.state.editorValue}
                   editor={this.editor}
                   onClickLink={onClickLink}
+                  zIndex={this.props.toolbarZ}
                 />
               )}
             {includeBlockInsert &&
@@ -319,6 +324,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
                   editor={this.editor}
                   onInsertImage={this.insertImageFile}
                   hoverWidthFactor={this.props.blockInsertHoverWidthFactor}
+                  zIndex={this.props.blockInsertZ}
                 />
               )}
             <StyledEditor

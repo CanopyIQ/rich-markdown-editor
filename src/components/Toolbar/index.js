@@ -28,6 +28,7 @@ type Props = {
   value: Value,
   onClickLink?: (href: string) => *,
   disableForTitle: boolean,
+  zIndex: number,
 };
 
 type State = {
@@ -41,6 +42,7 @@ type State = {
 export default class Toolbar extends React.Component<Props, State> {
   static defaultProps = {
     disableForTitle: false,
+    zIndex: 2,
   };
 
   state = {
@@ -165,9 +167,11 @@ export default class Toolbar extends React.Component<Props, State> {
   };
 
   render() {
+    const { zIndex } = this.props;
     const style = {
       top: this.state.top,
       left: this.state.left,
+      zIndex,
     };
 
     return (
@@ -194,7 +198,6 @@ export default class Toolbar extends React.Component<Props, State> {
 const Menu = styled.div`
   padding: 8px 16px;
   position: absolute;
-  z-index: 2;
   top: -10000px;
   left: -10000px;
   opacity: 0;
